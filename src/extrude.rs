@@ -1,5 +1,6 @@
 use bevy::prelude::*;
 use bevy::render::mesh::{Indices, PrimitiveTopology};
+use bevy::render::render_asset::RenderAssetUsages;
 use crate::bezier::OrientedPoint;
 
 pub struct ExtrudeShape {
@@ -56,7 +57,7 @@ impl ExtrudeShape {
         }
 
         // Normals
-        // Here we ignore the mesh normals and instead calculate
+        // Here we ignore the mesh normals and instead calculate normals that
         let vertex_count = vertices.len();
         let mut edge_normals = vec![[0., 0., 0.]; vertex_count];
         for i in 0..vertex_count {
@@ -131,8 +132,8 @@ pub fn extrude(shape: &ExtrudeShape, path: &Vec<OrientedPoint>) -> Mesh {
     mesh_indices.reverse();
 
     // Construct the mesh
-    let mut mesh = Mesh::new(PrimitiveTopology::TriangleList);
-    mesh.set_indices(Some(Indices::U32(mesh_indices)));
+    let mut mesh = Mesh::new(PrimitiveTopology::TriangleList, RenderAssetUsages::default());
+    mesh.insert_indices(Indices::U32(mesh_indices));
     mesh.insert_attribute(Mesh::ATTRIBUTE_POSITION, mesh_vertices);
     mesh.insert_attribute(Mesh::ATTRIBUTE_NORMAL, mesh_normals);
     if !shape.u_coords.is_empty() {

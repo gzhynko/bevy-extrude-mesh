@@ -3,7 +3,6 @@ use bevy::prelude::*;
 use bevy_asset_loader::prelude::*;
 use bevy_flycam::{FlyCam, NoCameraPlayerPlugin};
 use bevy_egui::{egui, EguiContexts, EguiPlugin};
-use bevy::prelude::shape::UVSphere;
 
 use bevy_extrude_mesh::extrude;
 use bevy_extrude_mesh::extrude::ExtrudeShape;
@@ -18,7 +17,7 @@ fn main() {
         .add_plugins(bevy_mod_picking::DefaultPickingPlugins)
         .add_plugins(bevy_transform_gizmo::TransformGizmoPlugin::default())
 
-        .add_state::<GameState>()
+        .init_state::<GameState>()
         .add_loading_state(
             LoadingState::new(GameState::AssetsLoading)
                 .continue_to_state(GameState::AssetsLoaded)
@@ -82,7 +81,7 @@ fn setup(
             shadows_enabled: true,
             ..default()
         },
-        transform: Transform::from_xyz(4.0, 8.0, 4.0),
+        transform: Transform::from_xyz(0.0, 10.0, 0.0),
         ..default()
     });
 
@@ -92,7 +91,6 @@ fn setup(
             ..default()
         })
         .insert(FlyCam)
-        .insert(bevy_mod_picking::prelude::RaycastPickCamera::default())
         .insert(bevy_transform_gizmo::GizmoPickSource::default());
 }
 
@@ -132,10 +130,10 @@ fn spawn_control_point_spheres(
     mut materials: ResMut<Assets<StandardMaterial>>,
     params: Res<MeshExtrusionParameters>,
 ) {
-    let mesh = meshes.add(Mesh::from(UVSphere { radius: 0.2, ..default() }));
+    let mesh = meshes.add(Mesh::from(Sphere { radius: 0.2, ..default() }));
 
-    let red_material = materials.add(StandardMaterial { base_color: Color::RED, unlit: true, ..default() });
-    let gray_material = materials.add(StandardMaterial { base_color: Color::GRAY, unlit: true, ..default() });
+    let red_material = materials.add(StandardMaterial { base_color: Color::linear_rgb(1.0, 0.0, 0.0), unlit: true, ..default() });
+    let gray_material = materials.add(StandardMaterial { base_color: Color::linear_rgba(0.0, 0.0, 0.0, 0.5), unlit: true, ..default() });
 
     for i in 0..params.control_points.len() {
         let pos = params.control_points[i];
@@ -148,7 +146,6 @@ fn spawn_control_point_spheres(
             })
             .insert(BezierControlGizmoSphereMarker(i))
             .insert(bevy_mod_picking::PickableBundle::default())
-            .insert(bevy_mod_picking::backends::raycast::RaycastPickTarget::default())
             .insert(bevy_transform_gizmo::GizmoTransformable::default());
     }
 }
@@ -215,7 +212,7 @@ fn modify_existing_mesh(mesh: &mut Mesh, extruded: Mesh) {
     let new_normals = extruded.attribute(Mesh::ATTRIBUTE_NORMAL).unwrap().as_float3().unwrap();
     let new_uvs = extruded.attribute(Mesh::ATTRIBUTE_UV_0);
 
-    mesh.set_indices(Some(new_indices));
+    mesh.insert_indices(new_indices);
     mesh.insert_attribute(Mesh::ATTRIBUTE_POSITION, new_vertices.to_owned());
     mesh.insert_attribute(Mesh::ATTRIBUTE_NORMAL, new_normals.to_owned());
     if new_uvs.is_some() {
