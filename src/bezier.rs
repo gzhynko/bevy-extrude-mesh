@@ -121,33 +121,33 @@ impl BezierCurve {
         result
     }
 
-    pub fn generate_path_with_custom_height_function<F: Fn(f64, f64) -> f64>(&self, subdivisions: u32, custom_height_function: F) -> Vec<OrientedPoint> {
+    pub fn generate_path_with_custom_height_function<F: Fn(f32, f32) -> f32>(&self, subdivisions: u32, custom_height_function: F) -> Vec<OrientedPoint> {
         let step = 1. / subdivisions as f32;
         let mut result = Vec::new();
 
         let mut i = 0.;
         while i < 1. {
             let mut point = self.get_oriented_point(i);
-            point.position.y = custom_height_function(point.position.x as f64, point.position.z as f64) as f32;
+            point.position.y = custom_height_function(point.position.x, point.position.z);
             result.push(point);
             i += step;
         }
 
         let mut final_point = self.get_oriented_point(1.);
-        final_point.position.y = custom_height_function(final_point.position.x as f64, final_point.position.z as f64) as f32;
+        final_point.position.y = custom_height_function(final_point.position.x, final_point.position.z);
         result.push(final_point);
 
         result
     }
 
-    pub fn calculate_arc_lengths_with_custom_height_function<F: Fn(f64, f64) -> f64>(&mut self, custom_height_function: &F) {
+    pub fn calculate_arc_lengths_with_custom_height_function<F: Fn(f32, f32) -> f32>(&mut self, custom_height_function: &F) {
         let mut old_point = self.get_point_pos_only(0.);
-        old_point.y = custom_height_function(old_point.x as f64, old_point.z as f64) as f32;
+        old_point.y = custom_height_function(old_point.x, old_point.z);
         let mut clen = 0.;
 
         for i in 1..=self.len {
             let mut point = self.get_point_pos_only(i as f32 / self.len as f32);
-            point.y = custom_height_function(point.x as f64, point.z as f64) as f32;
+            point.y = custom_height_function(point.x, point.z);
             let (dx, dy, dz) = (old_point.x - point.x, old_point.y - point.y, old_point.z - point.z);
             clen += (dx * dx + dy * dy + dz * dz).sqrt();
             self.arc_lengths[i] = clen;
